@@ -10,10 +10,45 @@ import { ReagentDetailModal } from './components/ReagentDetailModal';
 import { ImportModal } from './components/ImportModal';
 import { ReorderModal } from './components/ReorderModal';
 import { DirectAddModal } from './components/DirectAddModal';
+import { LoginScreen } from './components/LoginScreen';
+import { SupabaseConfigModal } from './components/SupabaseConfigModal';
+import { getSupabaseClient } from './lib/supabaseClient';
 
 const LOCAL_STORAGE_KEY = 'reagent_inventory_data_v1';
 
 export default function App() {
+  const [user, setUser] = useState<any>(null);
+  const [authChecking, setAuthChecking] = useState(true);
+  const [showSupabaseConfigModal, setShowSupabaseConfigModal] = useState(false);
+
+  // Check Supabase session on mount
+  useEffect(() => {
+    const checkSession = async () => {
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        setAuthChecking(false);
+        return;
+      }
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setUser(session.user);
+        }
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+          setUser(session?.user || null);
+        });
+        setAuthChecking(false);
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (e) {
+        console.error('Auth check error:', e);
+        setAuthChecking(false);
+      }
+    };
+    checkSession();
+  }, []);
+
   const [rawReagents, setRawReagents] = useState<ReagentItem[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -111,7 +146,6 @@ export default function App() {
       setActiveFilterKey('all');
     } else {
       setActiveFilterKey(key);
-      // Reset dropdown filters when card is clicked for clean focus
       setFilter(prev => ({
         ...prev,
         expiryState: 'all',
@@ -201,15 +235,56 @@ export default function App() {
     handleResetFilter();
   };
 
+  // Logout handler
+  const handleLogout = async () => {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+    setUser(null);
+  };
+
+  if (authChecking) {
+    return (
+      <div className="min-h-screen bg-zinc-100 flex items-center justify-center">
+        <div className="text-center font-black text-sm uppercase tracking-wider animate-pulse">
+          인증 세션 확인 중...
+        </div>
+      </div>
+    );
+  }
+
+  // If user is not logged in, show LoginScreen
+  if (!user) {
+    return (
+      <>
+        <LoginScreen
+          onLoginSuccess={loggedInUser => setUser(loggedInUser)}
+          onOpenSupabaseConfig={() => setShowSupabaseConfigModal(true)}
+        />
+        <SupabaseConfigModal
+          isOpen={showSupabaseConfigModal}
+          onClose={() => setShowSupabaseConfigModal(false)}
+          onConfigSaved={() => {
+            // Re-check session or prompt login
+          }}
+        />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-100/70 text-slate-900 flex flex-col font-sans">
       <Header
         totalCount={rawReagents.length}
+        user={user}
         onOpenImport={() => setShowImportModal(true)}
         onOpenDirectAdd={() => setShowDirectAddModal(true)}
         onOpenReorder={() => setShowReorderModal(true)}
         onResetDefault={handleResetDefault}
         onExportCSV={handleExportCSV}
+        onLogout={handleLogout}
+        onOpenSupabaseConfig={() => setShowSupabaseConfigModal(true)}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -274,10 +349,16 @@ export default function App() {
         />
       )}
 
+      <SupabaseConfigModal
+        isOpen={showSupabaseConfigModal}
+        onClose={() => setShowSupabaseConfigModal(false)}
+        onConfigSaved={() => {}}
+      />
+
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 py-4 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-400">
-          시약·시료 재고 관리대장 (PRD-R02 / EX-R02) • 기준일 2026-08-27 • 프론트엔드 단독 React SPA (LocalStorage 연동)
+          시약·시료 재고 관리대장 (PRD-R02 / EX-R02) • Supabase 인증 연동 • 사용자: {user?.email}
         </div>
       </footer>
     </div>

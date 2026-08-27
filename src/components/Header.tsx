@@ -1,22 +1,28 @@
 import React from 'react';
-import { Upload, Plus, FileText, RotateCcw, Download, ClipboardList } from 'lucide-react';
+import { Upload, Plus, FileText, RotateCcw, Download, ClipboardList, LogOut, User, Settings } from 'lucide-react';
 
 interface HeaderProps {
   totalCount: number;
+  user: any;
   onOpenImport: () => void;
   onOpenDirectAdd: () => void;
   onOpenReorder: () => void;
   onResetDefault: () => void;
   onExportCSV: () => void;
+  onLogout: () => void;
+  onOpenSupabaseConfig: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   totalCount,
+  user,
   onOpenImport,
   onOpenDirectAdd,
   onOpenReorder,
   onResetDefault,
-  onExportCSV
+  onExportCSV,
+  onLogout,
+  onOpenSupabaseConfig,
 }) => {
   return (
     <header className="bg-white border-b-4 border-black sticky top-0 z-20 shadow-[0_4px_0_0_rgba(0,0,0,1)]">
@@ -31,16 +37,34 @@ export const Header: React.FC<HeaderProps> = ({
                 시약·시료 재고 관리대장
               </h1>
             </div>
-            <p className="text-xs sm:text-sm text-zinc-600 font-bold mt-1.5 flex items-center gap-2">
+            <p className="text-xs sm:text-sm text-zinc-600 font-bold mt-1.5 flex flex-wrap items-center gap-2">
               <span>기준일: <strong className="text-black font-black">2026-08-27</strong></span>
               <span>•</span>
               <span>총 관리 품목: <strong className="text-black font-black">{totalCount}건</strong></span>
               <span>•</span>
               <span className="text-emerald-700 font-black uppercase bg-emerald-100 px-1.5 py-0.5 border border-emerald-400">자동 판정 활성</span>
+              {user && (
+                <>
+                  <span>•</span>
+                  <span className="inline-flex items-center gap-1 bg-zinc-200 text-black px-2 py-0.5 border border-black font-mono text-xs font-black">
+                    <User className="w-3 h-3" />
+                    {user.email}
+                  </span>
+                </>
+              )}
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={onOpenSupabaseConfig}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-zinc-100 text-black text-xs sm:text-sm font-black uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-zinc-200 transition active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] cursor-pointer"
+              title="Supabase 연동 설정"
+            >
+              <Settings className="w-4 h-4 text-black" />
+              Supabase 설정
+            </button>
+
             <button
               onClick={onOpenImport}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-black text-white text-xs sm:text-sm font-black uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-zinc-800 transition active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] cursor-pointer"
@@ -83,10 +107,18 @@ export const Header: React.FC<HeaderProps> = ({
               <RotateCcw className="w-3.5 h-3.5" />
               초기화
             </button>
+
+            <button
+              onClick={onLogout}
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-300 text-black text-xs font-black uppercase tracking-wide border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-amber-400 transition active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] cursor-pointer"
+              title="로그아웃"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              로그아웃
+            </button>
           </div>
         </div>
       </div>
     </header>
   );
 };
-
