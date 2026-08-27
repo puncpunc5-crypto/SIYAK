@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { ProcessedReagentItem, DuplicateGroupInfo } from '../types';
 import { X, Save, Trash2, AlertTriangle, CheckCircle2, Calculator, Layers, Calendar, MapPin, User, Tag } from 'lucide-react';
 import { BASE_DATE } from '../data/defaultReagents';
+import { ReagentNotes } from './ReagentNotes';
 
 interface ReagentDetailModalProps {
   item: ProcessedReagentItem;
   duplicateMap: Map<string, DuplicateGroupInfo>;
+  user: any;
   onClose: () => void;
   onSave: (updated: ProcessedReagentItem) => void;
   onDelete: (reagentId: string) => void;
@@ -14,6 +16,7 @@ interface ReagentDetailModalProps {
 export const ReagentDetailModal: React.FC<ReagentDetailModalProps> = ({
   item,
   duplicateMap,
+  user,
   onClose,
   onSave,
   onDelete
@@ -120,6 +123,9 @@ export const ReagentDetailModal: React.FC<ReagentDetailModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Researcher Private Notes Component */}
+          <ReagentNotes reagentId={formData.reagent_id} user={user} />
 
           {/* Form or View Details */}
           {isEditing ? (

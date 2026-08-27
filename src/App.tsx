@@ -317,6 +317,7 @@ export default function App() {
         <ReagentDetailModal
           item={selectedItem}
           duplicateMap={duplicateMap}
+          user={user}
           onClose={() => setSelectedItem(null)}
           onSave={handleSaveItem}
           onDelete={handleDeleteItem}
